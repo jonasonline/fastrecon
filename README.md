@@ -6,6 +6,7 @@
 - gcc
 - jq
 - nmap
+- bat
 
 ### Install
 ```bash

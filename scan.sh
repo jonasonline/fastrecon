@@ -40,9 +40,10 @@ tew -x "$scan_path/nmap.xml" -dnsx "$scan_path/dns.json --vhost -o "$scan_path/h
 cat "$scan_path/http.json" | jq -r '.url' | sed -e 's/:80$//g' -e 's/:443$//g' | sort -u > "$scan_path/http.txt"
 
 ### Crawling
-gospider -S "$scan_path/http.json" --json | gerp "{" | jq -r '.output?' | tee "$scan_path/crawl.txt"
+gospider -S "$scan_path/http.txt" --json | grep "{" | jq -r '.output?' | tee "$scan_path/crawl.txt"
 
-### ADD SCAN LOGIC HERE ###
+### JavaScript Pulling
+cat "$scan_path/crawl.txt" | grep "\.js" | httpx -sr -srd js
 
 
 # calculate time diff
