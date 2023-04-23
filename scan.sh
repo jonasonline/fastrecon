@@ -43,7 +43,7 @@ cat "$scan_path/http.json" | jq -r '.url' | sed -e 's/:80$//g' -e 's/:443$//g' |
 gospider -S "$scan_path/http.txt" --json | grep "{" | jq -r '.output?' | tee "$scan_path/crawl.txt"
 
 ### JavaScript Pulling
-cat "$scan_path/crawl.txt" | grep "\.js" | httpx -sr -srd js
+cat "$scan_path/crawl.txt" | grep "\.js" | httpx -sr -srd "$scan_path/js"
 
 
 # calculate time diff
