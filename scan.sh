@@ -30,6 +30,9 @@ cat "$scan_path/roots.txt" | shuffledns -w "$ppath/lists/pry-dns.txt" -r "$ppath
 
 ### ADD SCAN LOGIC HERE ###
 
+### Scan for wildcard domains
+puredns resolve "$scan_path/subs.txt" -r "$ppath/lists/resolvers.txt" -w "$scan_path/resolved-subs.txt"
+
 # calculate time diff
 end_time=$(date +%s)
 seconds="$(expr $end_time - $timestamp)"
