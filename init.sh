@@ -12,6 +12,8 @@ go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest
 go install -v github.com/pry0cc/tew@latest
 go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
 
+GO111MODULE=on go install github.com/jaeles-project/gospider@latest
+
 git clone https://github.com/robertdavidgraham/masscan
 cd masscan
 make

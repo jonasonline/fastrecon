@@ -5,6 +5,7 @@
 - make
 - gcc
 - jq
+- nmap
 
 ### Install
 ```bash
