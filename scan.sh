@@ -22,16 +22,19 @@ cd "$scan_path"
 ### PERFORM SCAN ###
 echo "Starting scan against roots:"
 cat "$scope_path/roots.txt"
-
 cp -v "$scope_path/roots.txt" "$scan_path/roots.txt"
-#sleep 3
-cat "$scan_path/roots.txt" | subfinder | anew subs.txt
-cat "$scan_path/roots.txt" | shuffledns -w "$ppath/lists/pry-dns.txt" -r "$ppath/lists/resolvers.txt" | anew subs.txt
+
+### DNS Enum
+## Requires non-free API key## cat "$scan_path/roots.txt" | haktrails subdomains | anew subs.txt | wc -l
+cat "$scan_path/roots.txt" | subfinder | anew subs.txt | wc -l
+cat "$scan_path/roots.txt" | shuffledns -w "$ppath/lists/pry-dns.txt" -r "$ppath/lists/resolvers.txt" | anew subs.txt | wc -l
+
+### DNS Resolution
+puredns resolve "$scan_path/subs.txt" -r "$ppath/lists/resolvers.txt" -w "$scan_path/resolved.txt" | wc -l
+dnsx -l "$scan_path/resolved.txt" -json -o "$scan_path/dns.json" | jq -r ' .a?[]?' | anew "$scan_path/ips.txt" | wc -l
 
 ### ADD SCAN LOGIC HERE ###
 
-### Scan for wildcard domains
-puredns resolve "$scan_path/subs.txt" -r "$ppath/lists/resolvers.txt" -w "$scan_path/resolved-subs.txt"
 
 # calculate time diff
 end_time=$(date +%s)
