@@ -4,6 +4,7 @@
 - GO (latest version)
 - make
 - gcc
+- jq
 
 ### Install
 ```bash

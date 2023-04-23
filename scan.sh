@@ -33,6 +33,12 @@ cat "$scan_path/roots.txt" | shuffledns -w "$ppath/lists/pry-dns.txt" -r "$ppath
 puredns resolve "$scan_path/subs.txt" -r "$ppath/lists/resolvers.txt" -w "$scan_path/resolved.txt" | wc -l
 dnsx -l "$scan_path/resolved.txt" -json -o "$scan_path/dns.json" | jq -r ' .a?[]?' | anew "$scan_path/ips.txt" | wc -l
 
+### Port Scanning & HTTP Server Discovery
+nmap -T4 -vv -iL "$scan_path/ips.txt" --top-ports 3000 -n --open -oX "$scan_path/nmap.xml"
+tew -x "$scan_path/nmap.xml" -dnsx "$scan_path/dns.json --vhost -o "$scan_path/hostport.txt | httpx -json -o "$scan_path/http.json"
+
+cat "$scan_path/http.json" | jq -r '.url' | sed -e 's/:80$//g' -e 's/:443$//g' | sort -u > "$scan_path/http.txt"
+
 ### ADD SCAN LOGIC HERE ###
 
 
