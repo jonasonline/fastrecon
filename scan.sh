@@ -53,7 +53,7 @@ time=""
 
 if [[ "$seconds" -gt 59 ]]
 then
-    minutes=$(expr Sseconds / 60)
+    minutes=$(expr $seconds / 60)
     time="$minutes minutes"
 
 else
@@ -61,4 +61,3 @@ else
 fi
 
 echo "Scan $id took $time"
-#echo "Scan $id took $time" | notify
