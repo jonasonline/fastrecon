@@ -39,11 +39,16 @@ tew -x "$scan_path/nmap.xml" -dnsx "$scan_path/dns.json" --vhost -o "$scan_path/
 
 cat "$scan_path/http.json" | jq -r '.url' | sed -e 's/:80$//g' -e 's/:443$//g' | sort -u > "$scan_path/http.txt"
 
-### Crawling
+### Crawling and harvesring URLs
 gospider -S "$scan_path/http.txt" --json | grep "{" | jq -r '.output?' | tee "$scan_path/crawl.txt"
+cat "$scan_path/http.txt" | katana -jc -aff | tee "$scan_path/crawl_kat.txt" | anew "$scan_path/crawl.txt"
+cat "$scan_path/roots.txt" | gau --blacklist ttf,woff,woff2,eot,otf,svg,png,jpg,jpeg,gif | tee "$scan_path/gau.txt"
+
+### Sorting and removing junk and dups
+grep -h '^http' "$scan_path/gau.txt" "$scan_path/crawl.txt" | sort | uniq > "$scan_path/urls.txt"
 
 ### JavaScript Pulling
-cat "$scan_path/crawl.txt" | grep "\.js" | httpx -sr -srd "$scan_path/js"
+cat "$scan_path/urls.txt" | grep "\.js" | httpx -sr -srd "$scan_path/js"
 
 
 # calculate time diff
