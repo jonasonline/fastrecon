@@ -11,6 +11,9 @@ go install -v github.com/d3mondev/puredns/v2@latest
 go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest
 go install -v github.com/pry0cc/tew@latest
 go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
+go install github.com/projectdiscovery/katana/cmd/katana@latest
+go install -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei@latest
+go install github.com/lc/gau/v2/cmd/gau@latest
 
 GO111MODULE=on go install github.com/jaeles-project/gospider@latest
 
