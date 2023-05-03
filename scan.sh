@@ -17,6 +17,7 @@ if [ ! -d "$scope_path" ]; then
 fi
 
 mkdir -p "$scan_path"
+
 cd "$scan_path"
 
 ### PERFORM SCAN ###
@@ -35,7 +36,7 @@ dnsx -l "$scan_path/resolved.txt" -json -o "$scan_path/dns.json" | jq -r ' .a?[]
 
 ### Port Scanning & HTTP Server Discovery
 nmap -T4 -vv -iL "$scan_path/ips.txt" --top-ports 3000 -n --open -oX "$scan_path/nmap.xml"
-tew -x "$scan_path/nmap.xml" -dnsx "$scan_path/dns.json" --vhost -o "$scan_path/hostport.txt" | httpx -sr -srd "$scan_path/responses" -json -o "$scan_path/http.json"
+tew -x "$scan_path/nmap.xml" -dnsx "$scan_path/dns.json" --vhost -o "$scan_path/hostport.txt" | httpx -sr -srd "$scan_path/responses" -screenshot -srd "$scan_path/screenshots" -json -o "$scan_path/http.json"
 
 cat "$scan_path/http.json" | jq -r '.url' | sed -e 's/:80$//g' -e 's/:443$//g' | sort -u > "$scan_path/http.txt"
 
