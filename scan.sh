@@ -42,7 +42,7 @@ cat "$scan_path/http.json" | jq -r '.url' | sed -e 's/:80$//g' -e 's/:443$//g' |
 
 ### Crawling and harvesring URLs
 gospider -S "$scan_path/http.txt" --json | grep "{" | jq -r '.output?' | tee "$scan_path/crawl.txt"
-cat "$scan_path/http.txt" | katana -jc -aff | tee "$scan_path/crawl_kat.txt" | anew "$scan_path/crawl.txt"
+cat "$scan_path/http.txt" | katana -jc -aff | tee "$scan_path/crawl_katana.txt" | anew "$scan_path/crawl.txt"
 cat "$scan_path/roots.txt" | gau --blacklist ttf,woff,woff2,eot,otf,svg,png,jpg,jpeg,gif | tee "$scan_path/gau.txt"
 
 ### Sorting and removing junk and dups
