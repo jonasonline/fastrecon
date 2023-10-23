@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# source: https://blog.projectdiscovery.io/building-one-shot-recon/
+# source: https://blog.projectdiscovery.io/building-one-shot-recon/ and https://www.youtube.com/watch?v=kWcuZvNXmDM 
 
 # set vars
 id="$1"
@@ -28,11 +28,11 @@ cp -v "$scope_path/roots.txt" "$scan_path/roots.txt"
 ### DNS Enum
 ## Requires non-free API key## cat "$scan_path/roots.txt" | haktrails subdomains | anew subs.txt | wc -l
 cat "$scan_path/roots.txt" | subfinder | anew subs.txt | wc -l
-cat "$scan_path/roots.txt" | shuffledns -w "$ppath/lists/pry-dns.txt" -r "$ppath/lists/resolvers.txt" | anew subs.txt | wc -l
+cat "$scan_path/roots.txt" | shuffledns -w "$ppath/lists/jhaddix_all.txt" -r "$ppath/lists/resolvers.txt" | anew subs.txt | wc -l
 
 ### DNS Resolution
 puredns resolve "$scan_path/subs.txt" -r "$ppath/lists/resolvers.txt" -w "$scan_path/resolved.txt" | wc -l
-dnsx -l "$scan_path/resolved.txt" -json -o "$scan_path/dns.json" | jq -r ' .a?[]?' | anew "$scan_path/ips.txt" | wc -l
+dnsx -l "$scan_path/resolved.txt" -json -o "$scan_path/dns.json" -r "$ppath/lists/resolvers.txt" | jq -r ' .a?[]?' | anew "$scan_path/ips.txt" | wc -l
 
 ### Port Scanning & HTTP Server Discovery
 nmap -T4 -vv -iL "$scan_path/ips.txt" --top-ports 3000 -n --open -oX "$scan_path/nmap.xml"
@@ -50,6 +50,30 @@ grep -h '^http' "$scan_path/gau.txt" "$scan_path/crawl.txt" | sort | uniq > "$sc
 
 ### JavaScript Pulling
 cat "$scan_path/urls.txt" | grep "\.js" | httpx -sr -srd "$scan_path/js"
+
+
+### Create screenshot gallery
+#!/bin/bash
+
+output_file="$scan_path/screenshotGallery.html"
+
+echo "<html>" > $output_file
+echo "<head>" >> $output_file
+echo "<style>" >> $output_file
+echo "body { display: flex; flex-wrap: wrap; justify-content: center; padding: 10px; }" >> $output_file
+echo "img { margin: 5px; width: 300px; height: auto; border: 1px solid #ccc; }" >> $output_file
+echo "</style>" >> $output_file
+echo "</head>" >> $output_file
+echo "<body>" >> $output_file
+
+# Hitta alla .jpg, .jpeg, .png, .gif filer i nuvarande mapp och undermappar
+find "$scan_path" -type f \( -iname \*.jpg -o -iname \*.jpeg -o -iname \*.png -o -iname \*.gif \) | while read -r img
+do
+    echo "<img src=\"${img}\" alt=\"${img}\">" >> $output_file
+done
+
+echo "</body>" >> $output_file
+echo "</html>" >> $output_file
 
 
 # calculate time diff
