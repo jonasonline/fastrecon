@@ -27,53 +27,71 @@ cp -v "$scope_path/roots.txt" "$scan_path/roots.txt"
 
 ### DNS Enum
 ## Requires non-free API key## cat "$scan_path/roots.txt" | haktrails subdomains | anew subs.txt | wc -l
-cat "$scan_path/roots.txt" | subfinder | anew subs.txt | wc -l
-cat "$scan_path/roots.txt" | shuffledns -w "$ppath/lists/jhaddix_all.txt" -r "$ppath/lists/resolvers.txt" | anew subs.txt | wc -l
+cat "$scan_path/roots.txt" | subfinder | anew "$scan_path/subs.txt" | wc -l
+cat "$scan_path/roots.txt" | shuffledns -w "$ppath/lists/jhaddix_all.txt" -r "$ppath/lists/resolvers.txt" | anew "$scan_path/subs.txt" | wc -l
+
+## Not Working 
+# cat "$scan_path/subs.txt" | sed -e 's/\./\n/g' -e 's/\-/\n/g' -e 's/[0-9]*//g' | sort -u | anew "$scan_path/domain_words.txt"
+# ./DNSCewl/DNScewl -tL "$scan_path/subs_clean.txt" 
 
 ### DNS Resolution
-puredns resolve "$scan_path/subs.txt" -r "$ppath/lists/resolvers.txt" -w "$scan_path/resolved.txt" | wc -l
-dnsx -l "$scan_path/resolved.txt" -json -o "$scan_path/dns.json" -r "$ppath/lists/resolvers.txt" | jq -r ' .a?[]?' | anew "$scan_path/ips.txt" | wc -l
+# Removing wildcard subdomains
+#puredns resolve "$scan_path/subs.txt" -r "$ppath/lists/resolvers.txt" -w "$scan_path/resolved.txt" | wc -l
+#dnsx -l "$scan_path/resolved.txt" -json -o "$scan_path/dns.json" -r "$ppath/lists/resolvers.txt" | jq -r ' .a?[]?' | anew "$scan_path/ips.txt" | wc -l
+
+cat "$scan_path/subs.txt" | dnsx -ro -silent -r "$ppath/lists/resolvers.txt" | anew "$scan_path/subs_ips.txt" | dnsx -ptr -ro -r "$ppath/lists/resolvers.txt" -silent | anew "$scan_path/subs_additional.txt"
 
 ### Port Scanning & HTTP Server Discovery
-nmap -T4 -vv -iL "$scan_path/ips.txt" --top-ports 3000 -n --open -oX "$scan_path/nmap.xml"
-tew -x "$scan_path/nmap.xml" -dnsx "$scan_path/dns.json" --vhost -o "$scan_path/hostport.txt" | httpx -fhr -sr -srd "$scan_path/responses" -screenshot -json -o "$scan_path/http.json"
-
-cat "$scan_path/http.json" | jq -r '.url' | sed -e 's/:80$//g' -e 's/:443$//g' | sort -u > "$scan_path/http.txt"
+cat "$scan_path/subs_ips.txt" | naabu -top-ports 1000 -silent | anew "$scan_path/alive_ports_per_ip.txt"
+cat "$scan_path/subs.txt" | naabu -top-ports 1000 -silent | anew "$scan_path/alive_ports_per_sub.txt"
+awk '/:80$/{print "http://" $0} /:443$/{print "https://" $0}' "$scan_path/alive_ports_per_sub.txt" | sed 's/:80//g; s/:443//g' | anew "$scan_path/urls_to_crawl.txt"
 
 ### Crawling and harvesring URLs
-gospider -S "$scan_path/http.txt" --json | grep "{" | jq -r '.output?' | tee "$scan_path/crawl.txt"
-cat "$scan_path/http.txt" | katana -jc -aff | tee "$scan_path/crawl_katana.txt" | anew "$scan_path/crawl.txt"
-cat "$scan_path/roots.txt" | gau --blacklist ttf,woff,woff2,eot,otf,svg,png,jpg,jpeg,gif | tee "$scan_path/gau.txt"
+cat "$scan_path/urls_to_crawl.txt" | katana -jc -aff | anew "$scan_path/crawl.txt"
+cat "$scan_path/roots.txt" | gau --blacklist ttf,woff,woff2,eot,otf,svg,png,jpg,jpeg,gif,bmp,pdf,mp3,mp4,mov --subs | anew "$scan_path/gau.txt"
 
 ### Sorting and removing junk and dups
-grep -h '^http' "$scan_path/gau.txt" "$scan_path/crawl.txt" | sort | uniq > "$scan_path/urls.txt"
+grep -h '^http' "$scan_path/gau.txt" "$scan_path/crawl.txt" | sort | anew "$scan_path/urls.txt"
 
 ### JavaScript Pulling
-cat "$scan_path/urls.txt" | grep "\.js" | httpx -sr -srd "$scan_path/js"
+cat "$scan_path/urls.txt" | grep "\.js$" | sort | uniq | httpx -mc 200 -sr -srd "$scan_path/js"
+python3 xnLinkFinder/xnLinkFinder.py  -i "$scan_path/js" -o "$scan_path/link_finder_links.txt" -op "$scan_path/link_finder_parameters.txt" 
+while IFS= read -r domain; do grep -E "^(http|https)://[^/]*$domain" "$scan_path/link_finder_links.txt"; done < "$scan_path/roots.txt" | sort -u | anew "$scan_path/urls.txt"
 
+### Gathering interesting stuff
+### TODO - filter extensive probing ### cat "$scan_path/urls.txt" | unfurl format %s://%d%p | grep -vE "\.(js|css|ico)$" | sort | uniq 
+cat "$scan_path/urls.txt" | unfurl format %s://%d | sort | uniq | httpx -fhr -sr -srd "$scan_path/responses" -screenshot -json -o "$scan_path/http.json"
+cat "$scan_path/urls.txt" | unfurl format %s://%d%p | sort | uniq | httpx -silent -title -status-code -mc 403,400,500 | anew "$scan_path/interesting_urls.txt"
+cat "$scan_path/urls.txt" | unfurl keypairs | anew "$scan_path/url_keypairs.txt"
+
+### Fuzzing
+ffuf -c -w OneListForAll/onelistforallmicro.txt:list -w $scan_path/interesting_urls_formatted.txt:host -u host/list -mc 200,400,500,403 -o "$scan_path/fuzzed.txt"
 
 ### Create screenshot gallery
-#!/bin/bash
-
 output_file="$scan_path/screenshotGallery.html"
 
-echo "<html>" > $output_file
-echo "<head>" >> $output_file
-echo "<style>" >> $output_file
-echo "body { display: flex; flex-wrap: wrap; justify-content: center; padding: 10px; }" >> $output_file
-echo "img { margin: 5px; width: 300px; height: auto; border: 1px solid #ccc; }" >> $output_file
-echo "</style>" >> $output_file
-echo "</head>" >> $output_file
-echo "<body>" >> $output_file
+echo "<html>" > "$output_file"
+echo "<head>" >> "$output_file"
+echo "<style>" >> "$output_file"
+echo "body { display: flex; flex-wrap: wrap; justify-content: center; padding: 10px; }" >> "$output_file"
+echo ".image-container { margin: 10px; text-align: center; }" >> "$output_file"
+echo "img { max-width: 300px; height: auto; border: 1px solid #ccc; }" >> "$output_file"
+echo "</style>" >> "$output_file"
+echo "</head>" >> "$output_file"
+echo "<body>" >> "$output_file"
 
-# Hitta alla .jpg, .jpeg, .png, .gif filer i nuvarande mapp och undermappar
+# Find all .jpg, .jpeg, .png, .gif files in the current folder and subfolders.
 find "$scan_path" -type f \( -iname \*.jpg -o -iname \*.jpeg -o -iname \*.png -o -iname \*.gif \) | while read -r img
 do
-    echo "<img src=\"${img}\" alt=\"${img}\">" >> $output_file
+    folder_name=$(basename "$(dirname "${img}")")
+    echo "<div class='image-container'>" >> "$output_file"
+    echo "<a href=\"${img}\"><img src=\"${img}\" alt=\"Image\" title=\"${folder_name}\"></a>" >> "$output_file"
+    echo "<div><a href=\"http://${folder_name}\">${folder_name}</a></div>" >> "$output_file"
+    echo "</div>" >> "$output_file"
 done
 
-echo "</body>" >> $output_file
-echo "</html>" >> $output_file
+echo "</body>" >> "$output_file"
+echo "</html>" >> "$output_file"
 
 
 # calculate time diff
