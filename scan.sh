@@ -7,6 +7,23 @@ id="$1"
 ppath="$(pwd)"
 scope_path="$ppath/scope/$id"
 
+bruteDns=false
+fullUrlCheck=false
+
+for arg in "$@"
+do
+    case $arg in
+        --brutedns)
+        bruteDns=true
+        shift # Remove --brutedns from args
+        ;;
+        --fullurlcheck)
+        fullUrlCheck=true
+        shift # Remove --fullurlcheck from args
+        ;;
+    esac
+done
+
 timestamp="$(date +%s)"
 scan_path="$ppath/scans/$id-$timestamp"
 
@@ -28,7 +45,10 @@ cp -v "$scope_path/roots.txt" "$scan_path/roots.txt"
 ### DNS Enum
 ## Requires non-free API key## cat "$scan_path/roots.txt" | haktrails subdomains | anew subs.txt | wc -l
 cat "$scan_path/roots.txt" | subfinder | anew "$scan_path/subs.txt" | wc -l
-cat "$scan_path/roots.txt" | shuffledns -w "$ppath/lists/jhaddix_all.txt" -r "$ppath/lists/resolvers.txt" | anew "$scan_path/subs.txt" | wc -l
+if [ "$bruteDns" = true ]; then
+  echo "Brute force DNS subdomains"
+  cat "$scan_path/roots.txt" | shuffledns -w "$ppath/lists/jhaddix_all.txt" -r "$ppath/lists/resolvers.txt" | anew "$scan_path/subs.txt" | wc -l
+fi
 
 ## Not Working 
 # cat "$scan_path/subs.txt" | sed -e 's/\./\n/g' -e 's/\-/\n/g' -e 's/[0-9]*//g' | sort -u | anew "$scan_path/domain_words.txt"
@@ -61,11 +81,14 @@ while IFS= read -r domain; do grep -E "^(http|https)://[^/]*$domain" "$scan_path
 ### Gathering interesting stuff
 ### TODO - filter extensive probing ### cat "$scan_path/urls.txt" | unfurl format %s://%d%p | grep -vE "\.(js|css|ico)$" | sort | uniq 
 cat "$scan_path/urls.txt" | unfurl format %s://%d | sort | uniq | httpx -fhr -sr -srd "$scan_path/responses" -screenshot -json -o "$scan_path/http.json"
-cat "$scan_path/urls.txt" | unfurl format %s://%d%p | sort | uniq | httpx -silent -title -status-code -mc 403,400,500 | anew "$scan_path/interesting_urls.txt"
+if [ "$fullUrlCheck" = true ]; then
+  echo "Performing full URL check is enabled"
+  cat "$scan_path/urls.txt" | unfurl format %s://%d%p | sort | uniq | httpx -silent -title -status-code -mc 403,400,500 | anew "$scan_path/interesting_urls.txt"
+fi
 cat "$scan_path/urls.txt" | unfurl keypairs | anew "$scan_path/url_keypairs.txt"
 
-### Fuzzing
-ffuf -c -w OneListForAll/onelistforallmicro.txt:list -w $scan_path/interesting_urls_formatted.txt:host -u host/list -mc 200,400,500,403 -o "$scan_path/fuzzed.txt"
+### Fuzzing - disabled
+#ffuf -c -w OneListForAll/onelistforallmicro.txt:list -w $scan_path/interesting_urls_formatted.txt:host -u host/list -mc 200,400,500,403 -o "$scan_path/fuzzed.txt"
 
 ### Create screenshot gallery
 output_file="$scan_path/screenshotGallery.html"
