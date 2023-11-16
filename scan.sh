@@ -44,7 +44,7 @@ cp -v "$scope_path/roots.txt" "$scan_path/roots.txt"
 
 ### DNS Enum
 ## Requires non-free API key## cat "$scan_path/roots.txt" | haktrails subdomains | anew subs.txt | wc -l
-cat "$scan_path/roots.txt" | subfinder | anew "$scan_path/subs.txt" | wc -l
+cat "$scan_path/roots.txt" | subfinder | anew "$scan_path/subs.txt" | dnsx -silent -asn | anew  "$scan_path/subs_asn_info.txt" | awk -F'[][]' '{print $2}' | awk '{print $1}' | cut -d',' -f1 | grep -v "^AS0$" | anew "$scan_path/asns.txt"
 if [ "$bruteDns" = true ]; then
   echo "Brute force DNS subdomains"
   cat "$scan_path/roots.txt" | shuffledns -w "$ppath/lists/jhaddix_all.txt" -r "$ppath/lists/resolvers.txt" | anew "$scan_path/subs.txt" | wc -l
@@ -59,7 +59,7 @@ fi
 #puredns resolve "$scan_path/subs.txt" -r "$ppath/lists/resolvers.txt" -w "$scan_path/resolved.txt" | wc -l
 #dnsx -l "$scan_path/resolved.txt" -json -o "$scan_path/dns.json" -r "$ppath/lists/resolvers.txt" | jq -r ' .a?[]?' | anew "$scan_path/ips.txt" | wc -l
 
-cat "$scan_path/subs.txt" | dnsx -ro -silent -r "$ppath/lists/resolvers.txt" | anew "$scan_path/subs_ips.txt" | dnsx -ptr -ro -r "$ppath/lists/resolvers.txt" -silent | anew "$scan_path/subs_additional.txt"
+cat "$scan_path/subs.txt" | dnsx -ro -silent -r "$ppath/lists/resolvers.txt" | anew "$scan_path/subs_ips.txt" | dnsx -ptr -ro -r "$ppath/lists/resolvers.txt" -silent | anew "$scan_path/subs_from_ptr_query.txt"
 
 ### Port Scanning & HTTP Server Discovery
 cat "$scan_path/subs_ips.txt" | naabu -top-ports 1000 -silent | anew "$scan_path/alive_ports_per_ip.txt"
