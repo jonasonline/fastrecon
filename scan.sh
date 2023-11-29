@@ -106,7 +106,7 @@ echo "<body>" >> "$output_file"
 # Find all .jpg, .jpeg, .png, .gif files in the current folder and subfolders.
 find "$scan_path" -type f \( -iname \*.jpg -o -iname \*.jpeg -o -iname \*.png -o -iname \*.gif \) | while read -r img
 do
-    folder_name=$(basename "$(dirname "${img}")")
+    folder_name=$(".$(dirname "${img}")")
     echo "<div class='image-container'>" >> "$output_file"
     echo "<a href=\"${img}\"><img src=\"${img}\" alt=\"Image\" title=\"${folder_name}\"></a>" >> "$output_file"
     echo "<div><a href=\"http://${folder_name}\">${folder_name}</a></div>" >> "$output_file"
@@ -117,7 +117,10 @@ echo "</body>" >> "$output_file"
 echo "</html>" >> "$output_file"
 
 # creating zip for download
-zip -r "$scan_path/scan.zip" $scan_path 
+
+cd $scan_path
+zip -j -r "$scan_path/scan.zip" $scan_path 
+cd $ppath
 
 # calculate time diff
 end_time=$(date +%s)
