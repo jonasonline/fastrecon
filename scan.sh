@@ -116,6 +116,8 @@ done
 echo "</body>" >> "$output_file"
 echo "</html>" >> "$output_file"
 
+# creating zip for download
+zip -r "$scan_path/scan.zip" $scan_path 
 
 # calculate time diff
 end_time=$(date +%s)
