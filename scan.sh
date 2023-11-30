@@ -119,7 +119,7 @@ echo "</html>" >> "$output_file"
 # creating zip for download
 
 cd $scan_path
-zip -j -r "$scan_path/scan.zip" $scan_path 
+zip -r "$scan_path/scan.zip" $scan_path 
 cd $ppath
 
 # calculate time diff
