@@ -106,12 +106,15 @@ echo "<body>" >> "$output_file"
 # Find all .jpg, .jpeg, .png, .gif files in the current folder and subfolders.
 find "$scan_path" -type f \( -iname \*.jpg -o -iname \*.jpeg -o -iname \*.png -o -iname \*.gif \) | while read -r img
 do
+    # Konverterar den absoluta sökvägen till en relativ sökväg
     relative_path=$(realpath --relative-to="$scan_path" "$img")
-    folder_name=$(dirname "$relative_path")
+    # Extraherar mappnamnet som också är URL:en
+    url=$(basename "$(dirname "$img")")
 
     echo "<div class='image-container'>" >> "$output_file"
-    echo "<a href=\"$relative_path\"><img src=\"$relative_path\" alt=\"Image\" title=\"$folder_name\"></a>" >> "$output_file"
-    echo "<div><a href=\"http://$folder_name\">$folder_name</a></div>" >> "$output_file"
+    echo "<a href=\"$relative_path\"><img src=\"$relative_path\" alt=\"Image\" title=\"$url\"></a>" >> "$output_file"
+    # Använder mappnamnet som URL för länken
+    echo "<div><a href=\"http://$url\">$url</a></div>" >> "$output_file"
     echo "</div>" >> "$output_file"
 done
 
