@@ -8,7 +8,7 @@ ppath="$(pwd)"
 scope_path="$ppath/scope/$id"
 
 bruteDns=false
-fullUrlCheck=false
+interestingUrlCheck=false
 
 for arg in "$@"
 do
@@ -17,9 +17,9 @@ do
         bruteDns=true
         shift # Remove --brutedns from args
         ;;
-        --fullurlcheck)
-        fullUrlCheck=true
-        shift # Remove --fullurlcheck from args
+        --interestingUrlCheck)
+        interestingUrlCheck=true
+        shift # Remove --interestingUrlCheck from args
         ;;
     esac
 done
@@ -75,13 +75,13 @@ grep -h '^http' "$scan_path/gau.txt" "$scan_path/crawl.txt" | sort | anew "$scan
 
 ### JavaScript Pulling
 cat "$scan_path/urls.txt" | grep "\.js$" | sort | uniq | httpx -mc 200 -sr -srd "$scan_path/js"
-python3 xnLinkFinder/xnLinkFinder.py  -i "$scan_path/js" -o "$scan_path/link_finder_links.txt" -op "$scan_path/link_finder_parameters.txt" 
+python3 xnLinkFinder/xnLinkFinder.py  -i "$scan_path/js" -o "$scan_path/link_finder_links.txt" -op "$scan_path/link_finder_parameters.txt" -owl "$scan_path/link_finder_wordlist.txt"
 while IFS= read -r domain; do grep -E "^(http|https)://[^/]*$domain" "$scan_path/link_finder_links.txt"; done < "$scan_path/roots.txt" | sort -u | anew "$scan_path/urls.txt"
 
 ### Gathering interesting stuff
 ### TODO - filter extensive probing ### cat "$scan_path/urls.txt" | unfurl format %s://%d%p | grep -vE "\.(js|css|ico)$" | sort | uniq 
 cat "$scan_path/urls.txt" | unfurl format %s://%d | sort | uniq | httpx -fhr -sr -srd "$scan_path/responses" -screenshot -json -o "$scan_path/http.json"
-if [ "$fullUrlCheck" = true ]; then
+if [ "$InterestingUrlCheck" = true ]; then
   echo "Performing full URL check is enabled"
   cat "$scan_path/urls.txt" | unfurl format %s://%d%p | sort | uniq | httpx -silent -title -status-code -mc 403,400,500 | anew "$scan_path/interesting_urls.txt"
 fi
