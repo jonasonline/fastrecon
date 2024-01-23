@@ -10,6 +10,9 @@ scope_path="$ppath/scope/$id"
 bruteDns=false
 interestingUrlCheck=false
 
+slack_token=""
+slack_channel=""
+
 for arg in "$@"
 do
     case $arg in
@@ -20,6 +23,10 @@ do
         --interestingUrlCheck)
         interestingUrlCheck=true
         shift # Remove --interestingUrlCheck from args
+        ;;
+        --slack)
+        IFS=':' read -r slack_token slack_channel <<< "${2}"
+        shift 2 # Remove --slack and its argument from args
         ;;
     esac
 done
@@ -124,8 +131,17 @@ echo "</html>" >> "$output_file"
 # creating zip for download
 # creating zip for download
 cd $scan_path
-zip -r "scan.zip" . 
+zip -r "$id.zip" . 
 cd $ppath
+
+if [ -n "$slack_token" ] && [ -n "$slack_channel" ]; then    
+    # Upload 
+    file_path="$scan_path/$id.zip"
+    filename="$id.zip"
+
+    # Ladda upp filen till Slack
+    curl -F file=@"$file_path" -F channels="$slack_channel" -F token="$slack_token" -F filename="$filename" https://slack.com/api/files.upload
+fi
 
 # calculate time diff
 end_time=$(date +%s)
