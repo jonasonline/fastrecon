@@ -24,9 +24,13 @@ do
         interestingUrlCheck=true
         shift # Remove --interestingUrlCheck from args
         ;;
-        --slack)
-        IFS=':' read -r slack_token slack_channel <<< "${2}"
-        shift 2 # Remove --slack and its argument from args
+        --slackToken)
+        slack_token="$2"
+        shift 2 # Remove --slackToken and its argument from args
+        ;;
+        --slackChannel)
+        slack_channel="$2"
+        shift 2 # Remove --slackChannel and its argument from args
         ;;
     esac
 done
@@ -139,7 +143,6 @@ if [ -n "$slack_token" ] && [ -n "$slack_channel" ]; then
     file_path="$scan_path/$id.zip"
     filename="$id.zip"
 
-    # Ladda upp filen till Slack
     curl -F file=@"$file_path" -F channels="$slack_channel" -F token="$slack_token" -F filename="$filename" https://slack.com/api/files.upload
 fi
 
