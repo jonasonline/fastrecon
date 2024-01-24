@@ -75,13 +75,13 @@ cat "$scan_path/roots.txt" | gau --blacklist ttf,woff,woff2,eot,otf,svg,png,jpg,
 grep -h '^http' "$scan_path/gau.txt" "$scan_path/crawl.txt" | sort | anew "$scan_path/urls.txt"
 
 ### JavaScript Pulling
-cat "$scan_path/urls.txt" | grep "\.js$" | sort | uniq | httpx -mc 200 -sr -srd "$scan_path/js"
+cat "$scan_path/urls.txt" | grep "\.js$" | sort | uniq | httpx -silent -mc 200 -sr -srd "$scan_path/js"
 python3 $PWD/xnLinkFinder/xnLinkFinder.py -i "$scan_path/js" -o "$scan_path/link_finder_links.txt" -op "$scan_path/link_finder_parameters.txt" -owl "$scan_path/link_finder_wordlist.txt"
 while IFS= read -r domain; do grep -E "^(http|https)://[^/]*$domain" "$scan_path/link_finder_links.txt"; done < "$scan_path/roots.txt" | sort -u | anew "$scan_path/urls.txt"
 
 ### Gathering interesting stuff
 ### TODO - filter extensive probing ### cat "$scan_path/urls.txt" | unfurl format %s://%d%p | grep -vE "\.(js|css|ico)$" | sort | uniq 
-cat "$scan_path/urls.txt" | unfurl format %s://%d | sort | uniq | httpx -fhr -sr -srd "$scan_path/responses" -screenshot -json -o "$scan_path/http.json"
+cat "$scan_path/urls.txt" | unfurl format %s://%d | sort | uniq | httpx -silent -fhr -sr -srd "$scan_path/responses" -screenshot -json -o "$scan_path/http.json"
 if [ "$interestingUrlCheck" = true ]; then
   echo "Performing full URL check is enabled"
   cat "$scan_path/urls.txt" | unfurl format %s://%d%p | sort | uniq | httpx -silent -title -status-code -mc 403,400,500 | anew "$scan_path/interesting_urls.txt"
