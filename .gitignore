@@ -1,0 +1,78 @@
+# macOS-specific files
+# .DS_Store: Stores custom folder attributes
+# .AppleDouble: Stores additional file resources
+# .LSOverride: Contains the property list information
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnail cache files
+# ._FILE: Stores additional metadata
+._*
+
+# Files created by Finder
+# .Icon?: Custom Finder icon
+# .DocumentRevisions-V100: Used by Finder for document versioning
+.Icon?
+.DocumentRevisions-V100
+
+# Folders often used by macOS
+# .Trashes: Stores deleted files
+# .Spotlight-V100: Stores Spotlight metadata
+.Trashes
+.Spotlight-V100
+
+# Directory configuration files
+# .directory: Used by KDE directory management
+.directory
+
+# Windows image file caches
+# Thumbs.db: Thumbnail cache
+# ehthumbs.db: Extra thumbnail cache
+Thumbs.db
+ehthumbs.db
+
+# Common folders and files in various projects
+# node_modules/: Node modules folder
+# tmp/, temp/: Temporary files
+# build/, dist/: Build output directories
+# .env: Environment variables file
+# *.log: Log files
+# *.csv, *.dat, *.out, *.pid, *.seed: Various data and output files
+# *.db, *.sqlite, *.sqlite3: Database files
+# *.tar.gz, *.zip, *.rar: Compressed files
+# *.exe, *.dll, *.so, *.dylib: Compiled binaries
+# *.test: Test files
+# *.swp, *.swo: Vim swap files
+# .idea/, .vscode/: IDE configuration folders
+# *.sublime-workspace, *.sublime-project: Sublime Text files
+node_modules/
+tmp/
+temp/
+build/
+dist/
+.env
+*.log
+*.csv
+*.dat
+*.out
+*.pid
+*.seed
+*.db
+*.sqlite
+*.sqlite3
+*.tar.gz
+*.zip
+*.rar
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.swp
+*.swo
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+

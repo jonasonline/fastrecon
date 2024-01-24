@@ -13,26 +13,18 @@ interestingUrlCheck=false
 slack_token=""
 slack_channel=""
 
-for arg in "$@"
-do
-    case $arg in
-        --bruteDns)
+for ((i = 1; i <= $#; i++ )); do
+    if [ "${!i}" = "--slackToken" ]; then
+        i=$((i + 1))
+        slack_token="${!i}"
+    elif [ "${!i}" = "--slackChannel" ]; then
+        i=$((i + 1))
+        slack_channel="${!i}"
+    elif [ "${!i}" = "--bruteDns" ]; then
         bruteDns=true
-        shift # Remove --brutedns from args
-        ;;
-        --interestingUrlCheck)
+    elif [ "${!i}" = "--interestingUrlCheck" ]; then
         interestingUrlCheck=true
-        shift # Remove --interestingUrlCheck from args
-        ;;
-        --slackToken)
-        slack_token="$2"
-        shift 2 # Remove --slackToken and its argument from args
-        ;;
-        --slackChannel)
-        slack_channel="$2"
-        shift 2 # Remove --slackChannel and its argument from args
-        ;;
-    esac
+    fi
 done
 
 timestamp="$(date +%s)"
