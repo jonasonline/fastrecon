@@ -150,4 +150,4 @@ else
     time="$seconds seconds"
 fi
 
-echo "\nScan $id took $time"
+echo -e "\nScan $id took $time"
