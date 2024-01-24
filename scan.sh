@@ -38,8 +38,6 @@ fi
 
 mkdir -p "$scan_path"
 
-cd "$scan_path"
-
 ### PERFORM SCAN ###
 echo "Starting scan against roots:"
 cat "$scope_path/roots.txt"
