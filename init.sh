@@ -32,17 +32,6 @@ GO111MODULE=on go install github.com/jaeles-project/gospider@latest
 
 git clone https://github.com/codingo/DNSCewl.git
 git clone https://github.com/six2dez/OneListForAll.git 
-git clone https://github.com/robertdavidgraham/masscan
-cd masscan
-make
-make install
-cd ..
-
-git clone https://github.com/blechschmidt/massdns.git
-cd massdns
-make
-make install
-cd ..
 
 git clone https://github.com/xnl-h4ck3r/xnLinkFinder.git
 cd xnLinkFinder
