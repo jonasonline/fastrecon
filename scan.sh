@@ -123,7 +123,6 @@ echo "</body>" >> "$output_file"
 echo "</html>" >> "$output_file"
 
 # creating zip for download
-# creating zip for download
 cd $scan_path
 zip -r "$id.zip" . 
 cd $ppath
