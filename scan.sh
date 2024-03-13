@@ -75,14 +75,14 @@ cat "$scan_path/subs.txt" | naabu -top-ports 1000 -silent | anew "$scan_path/ali
 awk '/:80$/{print "http://" $0} /:443$/{print "https://" $0}' "$scan_path/alive_ports_per_sub.txt" | sed 's/:80//g; s/:443//g' | anew "$scan_path/temp/urls_to_crawl.txt"
 
 ### Crawling and harvesring URLs
-cat "$scan_path/temp/urls_to_crawl.txt" | katana -jc -aff | anew "$scan_path/temp/crawl_out.txt"
+cat "$scan_path/temp/urls_to_crawl.txt" | katana -jc -jsl -aff | anew "$scan_path/temp/crawl_out.txt"
 cat "$scan_path/roots.txt" | gau --blacklist ttf,woff,woff2,eot,otf,svg,png,jpg,jpeg,gif,bmp,pdf,mp3,mp4,mov --subs | anew "$scan_path/temp/gau.txt"
 
 ### Sorting and removing junk and dups
 grep -h '^http' "$scan_path/temp/gau.txt" "$scan_path/temp/crawl_out.txt" | sort | anew "$scan_path/urls.txt"
 
 ### JavaScript Pulling
-cat "$scan_path/urls.txt" | grep "\.js$" | sort | uniq | httpx -silent -mc 200 -sr -srd "$scan_path/js"
+cat "$scan_path/urls.txt" | grep "\.js\($\|\?\)" | sort | uniq | httpx -silent -mc 200 -sr -srd "$scan_path/js"
 python3 $PWD/xnLinkFinder/xnLinkFinder.py -i "$scan_path/js" -o "$scan_path/link_finder_links.txt" -op "$scan_path/link_finder_parameters.txt" -owl "$scan_path/link_finder_wordlist.txt"
 while IFS= read -r domain; do grep -E "^(http|https)://[^/]*$domain" "$scan_path/link_finder_links.txt"; done < "$scan_path/roots.txt" | sort -u | anew "$scan_path/urls.txt"
 
