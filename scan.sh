@@ -163,5 +163,5 @@ fi
 echo -e "\nScan $id took $time"
 
 if [ -n "$slack_token" ] && [ -n "$slack_channel" ] ; then    
-    curl -X POST -H "Authorization: Bearer $slack_token" -H 'Content-type: application/json' --data '{"channel":"'"$slack_channel"'","text":"Scan '"$id"' took '"$time"'"}' https://slack.com/api/chat.postMessage
+    curl -X POST -H "Authorization: Bearer $slack_token" -H 'Content-type: application/json; charset=utf-8' --data '{"channel":"'"$slack_channel"'","text":"Scan '"$id"' took '"$time"'"}' https://slack.com/api/chat.postMessage
 fi
