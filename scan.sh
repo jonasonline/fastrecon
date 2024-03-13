@@ -144,6 +144,7 @@ fi
 
 if [ -n "$copyResultsToPath"]; then
     cp $scan_path/$id.zip $copyResultsToPath
+fi
 
 # calculate time diff
 end_time=$(date +%s)
