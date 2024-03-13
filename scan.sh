@@ -142,7 +142,7 @@ if [ -n "$slack_token" ] && [ -n "$slack_channel" ] && [ $uploadToSlack = true ]
     curl -F file=@"$file_path" -F channels="$slack_channel" -F token="$slack_token" -F filename="$filename" https://slack.com/api/files.upload
 fi
 
-if [ -n "$copyResultsToPath"]; then
+if [ -n "$copyResultsToPath" ]; then
     cp $scan_path/$id.zip $copyResultsToPath
 fi
 
