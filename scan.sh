@@ -143,7 +143,7 @@ if [ -n "$slack_token" ] && [ -n "$slack_channel" ] && [ $uploadToSlack = true ]
 fi
 
 if [ -n "$copyResultsToPath" ]; then
-    cp $scan_path/$id.zip $copyResultsToPath
+    cp $scan_path/$id-$timestamp.zip $copyResultsToPath
 fi
 
 # calculate time diff
