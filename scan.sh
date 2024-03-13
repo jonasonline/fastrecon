@@ -9,9 +9,11 @@ scope_path="$ppath/scope/$id"
 
 bruteDns=false
 interestingUrlCheck=false
+uploadToSlack=false
 
 slack_token=""
 slack_channel=""
+copyResultsToPath=""
 
 for ((i = 1; i <= $#; i++ )); do
     if [ "${!i}" = "--slackToken" ]; then
@@ -20,10 +22,15 @@ for ((i = 1; i <= $#; i++ )); do
     elif [ "${!i}" = "--slackChannel" ]; then
         i=$((i + 1))
         slack_channel="${!i}"
+    elif [ "${!i}" = "--copyResultsToPath" ]; then
+        i=$((i + 1))
+        copyResultsToPath="${!i}"
     elif [ "${!i}" = "--bruteDns" ]; then
         bruteDns=true
     elif [ "${!i}" = "--interestingUrlCheck" ]; then
         interestingUrlCheck=true
+    elif [ "${!i}" = "--uploadToSlack" ]; then
+        uploadToSlack=true
     fi
 done
 
@@ -36,7 +43,7 @@ if [ ! -d "$scope_path" ]; then
     exit 1
 fi
 
-mkdir -p "$scan_path"
+mkdir -p "$scan_path/temp"
 
 ### PERFORM SCAN ###
 echo "Starting scan against roots:"
@@ -65,14 +72,14 @@ cat "$scan_path/subs.txt" | dnsx -ro -silent -r "$ppath/lists/resolvers.txt" | a
 ### Port Scanning & HTTP Server Discovery
 cat "$scan_path/subs_ips.txt" | naabu -top-ports 1000 -silent | anew "$scan_path/alive_ports_per_ip.txt"
 cat "$scan_path/subs.txt" | naabu -top-ports 1000 -silent | anew "$scan_path/alive_ports_per_sub.txt"
-awk '/:80$/{print "http://" $0} /:443$/{print "https://" $0}' "$scan_path/alive_ports_per_sub.txt" | sed 's/:80//g; s/:443//g' | anew "$scan_path/urls_to_crawl.txt"
+awk '/:80$/{print "http://" $0} /:443$/{print "https://" $0}' "$scan_path/alive_ports_per_sub.txt" | sed 's/:80//g; s/:443//g' | anew "$scan_path/temp/urls_to_crawl.txt"
 
 ### Crawling and harvesring URLs
-cat "$scan_path/urls_to_crawl.txt" | katana -jc -aff | anew "$scan_path/crawl.txt"
-cat "$scan_path/roots.txt" | gau --blacklist ttf,woff,woff2,eot,otf,svg,png,jpg,jpeg,gif,bmp,pdf,mp3,mp4,mov --subs | anew "$scan_path/gau.txt"
+cat "$scan_path/temp/urls_to_crawl.txt" | katana -jc -aff | anew "$scan_path/temp/crawl_out.txt"
+cat "$scan_path/roots.txt" | gau --blacklist ttf,woff,woff2,eot,otf,svg,png,jpg,jpeg,gif,bmp,pdf,mp3,mp4,mov --subs | anew "$scan_path/temp/gau.txt"
 
 ### Sorting and removing junk and dups
-grep -h '^http' "$scan_path/gau.txt" "$scan_path/crawl.txt" | sort | anew "$scan_path/urls.txt"
+grep -h '^http' "$scan_path/temp/gau.txt" "$scan_path/temp/crawl_out.txt" | sort | anew "$scan_path/urls.txt"
 
 ### JavaScript Pulling
 cat "$scan_path/urls.txt" | grep "\.js$" | sort | uniq | httpx -silent -mc 200 -sr -srd "$scan_path/js"
@@ -81,7 +88,7 @@ while IFS= read -r domain; do grep -E "^(http|https)://[^/]*$domain" "$scan_path
 
 ### Gathering interesting stuff
 ### TODO - filter extensive probing ### cat "$scan_path/urls.txt" | unfurl format %s://%d%p | grep -vE "\.(js|css|ico)$" | sort | uniq 
-cat "$scan_path/urls.txt" | unfurl format %s://%d | sort | uniq | httpx -silent -fhr -sr -srd "$scan_path/responses" -screenshot -json -o "$scan_path/http.json" > /dev/null 2>&1
+cat "$scan_path/urls.txt" | unfurl format %s://%d | sort | uniq | httpx -silent -fhr -sr -srd "$scan_path/responses" -screenshot -esb -json -o "$scan_path/http.out.json" > /dev/null 2>&1
 if [ "$interestingUrlCheck" = true ]; then
   echo "Performing full URL check is enabled"
   cat "$scan_path/urls.txt" | unfurl format %s://%d%p | sort | uniq | httpx -silent -title -status-code -mc 403,400,500 | anew "$scan_path/interesting_urls.txt"
@@ -124,16 +131,19 @@ echo "</html>" >> "$output_file"
 
 # creating zip for download
 cd $scan_path
-zip -r "$id.zip" . 
+zip -r "$id-$timestamp.zip" . 
 cd $ppath
 
-if [ -n "$slack_token" ] && [ -n "$slack_channel" ]; then    
+if [ -n "$slack_token" ] && [ -n "$slack_channel" ] && [ $uploadToSlack = true ]; then    
     # Upload 
-    file_path="$scan_path/$id.zip"
-    filename="$id.zip"
+    file_path="$scan_path/$id-$timestamp.zip"
+    filename="$id-$timestamp.zip"
 
     curl -F file=@"$file_path" -F channels="$slack_channel" -F token="$slack_token" -F filename="$filename" https://slack.com/api/files.upload
 fi
+
+if [ -n "$copyResultsToPath"]; then
+    cp $scan_path/$id.zip $copyResultsToPath
 
 # calculate time diff
 end_time=$(date +%s)
@@ -150,3 +160,7 @@ else
 fi
 
 echo -e "\nScan $id took $time"
+
+if [ -n "$slack_token" ] && [ -n "$slack_channel" ] ; then    
+    curl -X POST -H "Authorization: Bearer $slack_token" -H 'Content-type: application/json' --data '{"channel":"'"$slack_channel"'","text":"Scan '"$id"' took '"$time"'"}' https://slack.com/api/chat.postMessage
+fi
