@@ -86,6 +86,49 @@ cat "$scan_path/urls.txt" | grep "\.js\($\|\?\)" | sort | uniq | httpx -silent -
 python3 $PWD/xnLinkFinder/xnLinkFinder.py -i "$scan_path/js" -o "$scan_path/link_finder_links.txt" -op "$scan_path/link_finder_parameters.txt" -owl "$scan_path/link_finder_wordlist.txt"
 while IFS= read -r domain; do grep -E "^(http|https)://[^/]*$domain" "$scan_path/link_finder_links.txt"; done < "$scan_path/roots.txt" | sort -u | anew "$scan_path/urls.txt"
 
+# Base directory containing httpx response files for JavaScript
+js_dir="$scan_path/js"
+
+# Function to process files in a directory
+process_files() {
+    local directory="$1"
+    # Iterate through each item in the directory
+    for txt_file in "$directory"/*; do
+        if [[ -d "$txt_file" ]]; then
+            # If item is a directory, recursively process this subdirectory
+            process_files "$txt_file"
+        elif [[ $txt_file == *.txt ]]; then
+            # Extract JavaScript file name from the txt content
+            js_name_start=$(head -n 1 "$txt_file" | grep -oE '[^/]*$')
+            js_name_end=$(tail -n 1 "$txt_file" | grep -oE '[^/]*$')
+
+            # Prefer the name extracted from the end of the file if available
+            js_name="${js_name_end:-$js_name_start}"
+
+            # Define the new file path with the same directory
+            new_file_path="$directory/$js_name"
+
+            # Check if the JavaScript file already exists, and find a unique name if necessary
+            if [[ -e "$new_file_path" ]]; then
+                # Find a unique name by appending a number
+                suffix=1
+                while [[ -e "${new_file_path%.*}_$suffix.${new_file_path##*.}" ]]; do
+                    ((suffix++))
+                done
+                new_file_path="${new_file_path%.*}_$suffix.${new_file_path##*.}"
+            fi
+
+            # Rename the txt file to the JavaScript file name
+            mv -v "$txt_file" "$new_file_path"
+        fi
+    done
+}
+
+# Start processing files from the base js directory
+process_files "$js_dir"
+
+
+
 ### Gathering interesting stuff
 ### TODO - filter extensive probing ### cat "$scan_path/urls.txt" | unfurl format %s://%d%p | grep -vE "\.(js|css|ico)$" | sort | uniq 
 cat "$scan_path/urls.txt" | unfurl format %s://%d | sort | uniq | httpx -silent -fhr -sr -srd "$scan_path/responses" -screenshot -esb -ehb -json -o "$scan_path/http.out.json" > /dev/null 2>&1
