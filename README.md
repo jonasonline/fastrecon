@@ -57,6 +57,64 @@ FLAGS:
 
 ```
 
+## Output
+- **`roots.txt`**
+
+  **Description**: Copy of the root domains file for the target from the `scope` directory, serving as the initial input for reconnaissance, containing base domains to be explored.
+
+- **`subs.txt`**
+
+  **Description**: List of subdomains identified through tools like subfinder and optionally brute-forced via shuffledns, providing a comprehensive list of potential targets.
+
+- **`subs_asn_info.txt`**
+
+  **Description**: ASN (Autonomous System Number) information for the discovered subdomains, useful for understanding the network landscape of the target domains.
+
+- **`asns.txt`**
+
+  **Description**: Filtered list of unique ASNs derived from subdomains' ASN information, useful for identifying networks of interest.
+
+- **`subs_ips.txt`**
+
+  **Description**: IP addresses resolved from the list of subdomains, crucial for further scans like port scanning and service identification.
+
+- **`subs_from_ptr_query.txt`**
+
+  **Description**: Results from reverse DNS lookups (PTR queries) on IP addresses, revealing additional subdomains or hostnames not found through forward DNS lookups.
+
+- **`alive_ports_per_ip.txt`** and **`alive_ports_per_sub.txt`**
+
+  **Description**: Results from port scanning operations, listing open ports on IP addresses and subdomains, indicating potential services for further investigation.
+
+- **`temp/urls_to_crawl.txt`**
+
+  **Description**: Aggregated URLs prepared for crawling, formed by appending `http://` or `https://` based on the port (80 or 443).
+
+- **`urls.txt`**
+
+  **Description**: Cumulation of URLs identified as interesting through crawling and other methods, containing potential targets for vulnerability scanning.
+
+- **`js/`** (directory)
+
+  **Description**: Contains downloaded JavaScript files from crawled URLs for analysis of endpoints, hardcoded secrets, or potentially sensitive information.
+
+- **`link_finder_links.txt`**, **`link_finder_parameters.txt`**, and **`link_finder_wordlist.txt`**
+
+  **Description**: Output from analyzing JavaScript files, revealing internal paths, API endpoints, and parameter names useful for crafting web application attacks.
+
+- **`http.out.json`**
+
+  **Description**: Results from httpx scans, including HTTP response data, headers, and optionally screenshots, providing a snapshot of web service configurations and technologies.
+
+- **`screenshotGallery.html`**
+
+  **Description**: An HTML file containing a gallery of screenshots from scanned URLs, offering a quick visual identification of noteworthy web applications or login pages.
+
+- **`[id]-[timestamp].zip`**
+  
+  **Description**: A compressed archive of all scan results, facilitating easy download, sharing, or archiving of the reconnaissance phase output for a given target.
+
+
 ## Contributing
 Contributions are welcome. Feel free to open issues or submit PRs.
 
