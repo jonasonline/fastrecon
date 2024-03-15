@@ -97,36 +97,58 @@ process_files() {
         if [[ -d "$txt_file" ]]; then
             # If item is a directory, recursively process this subdirectory
             process_files "$txt_file"
-        elif [[ $txt_file == *.txt ]]; then
-            # Extract JavaScript file name from the txt content
-            js_name_start=$(head -n 1 "$txt_file" | grep -oE '[^/]*$')
-            js_name_end=$(tail -n 1 "$txt_file" | grep -oE '[^/]*$')
+        elif [[ $txt_file == *.txt && $(basename "$txt_file") != "index.txt" ]]; then
+            # Extract JavaScript file name from the txt content, only the file name, not the full path
+            js_name=$(grep -oE 'GET /.* HTTP/1.1' "$txt_file" | sed -E 's/GET \/| HTTP\/1.1//g' | awk -F/ '{print $NF}')
+            new_txt_file_path="$directory/${js_name}.txt"
 
-            # Prefer the name extracted from the end of the file if available
-            js_name="${js_name_end:-$js_name_start}"
-
-            # Define the new file path with the same directory
-            new_file_path="$directory/$js_name"
-
-            # Check if the JavaScript file already exists, and find a unique name if necessary
-            if [[ -e "$new_file_path" ]]; then
-                # Find a unique name by appending a number
+            # Ensure a unique name for the .txt file
+            if [[ -e "$new_txt_file_path" ]]; then
                 suffix=2
-                while [[ -e "${new_file_path%.*}_$suffix.${new_file_path##*.}" ]]; do
+                while [[ -e "${new_txt_file_path%.*}_$suffix.${new_txt_file_path##*.}" ]]; do
                     ((suffix++))
                 done
-                new_file_path="${new_file_path%.*}_$suffix.${new_file_path##*.}"
+                new_txt_file_path="${new_txt_file_path%.*}_$suffix.${new_txt_file_path##*.}"
             fi
 
-            # Rename the txt file to the JavaScript file name
-            mv -v "$txt_file" "$new_file_path"
+            # Determine start and end lines for JavaScript extraction
+            start_line=$(awk '/^\r?$/{i++}i==2{print NR; exit}' "$txt_file")
+            end_line=$(awk 'END{print NR}' "$txt_file")
+            is_chunked=$(grep -m 1 "Transfer-Encoding: chunked" "$txt_file" | wc -l)
+
+            if [ "$is_chunked" -eq 1 ]; then
+                start_line=$((start_line + 3)) # Adjust for chunked encoding
+                end_line=$(awk '/^0\r?$/{print NR; exit}' "$txt_file")
+                end_line=$((end_line - 1))
+            else
+                start_line=$((start_line + 1))
+                end_line=$((end_line - 2))
+            fi
+
+            # Extract JavaScript into a new file
+            js_file_path="${directory}/${js_name}"
+
+            # Ensure a unique name for the JavaScript file
+            if [[ -e "$js_file_path" ]]; then
+                suffix=2
+                while [[ -e "${js_file_path%.*}_$suffix.${js_file_path##*.}" ]]; do
+                    ((suffix++))
+                done
+                js_file_path="${js_file_path%.*}_$suffix.${js_file_path##*.}"
+            fi
+
+            # Extract the JavaScript content to a new file
+            sed -n "${start_line},${end_line}p" "$txt_file" > "$js_file_path"
+
+            # Rename the original txt file to new name with .txt appended
+            mv -v "$txt_file" "$new_txt_file_path"
         fi
     done
 }
 
+
 # Start processing files from the base js directory
 process_files "$js_dir"
-
 
 
 ### Gathering interesting stuff
