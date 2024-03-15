@@ -15,6 +15,7 @@ FastRecon is a semi-automated reconnaissance tool for web security testing. It a
 
 ## Prerequisites
 - Go (latest version)
+- Node, NPM
 - Make, GCC, jq, nmap, bat
 - Headless Chrome dependencies for certain tasks
 
