@@ -117,7 +117,7 @@ process_files() {
             is_chunked=$(grep -m 1 "Transfer-Encoding: chunked" "$txt_file" | wc -l)
 
             if [ "$is_chunked" -eq 1 ]; then
-                start_line=$((start_line + 3)) # Adjust for chunked encoding
+                start_line=$((start_line + 2)) # Adjust for chunked encoding
                 end_line=$(awk '/^0\r?$/{print NR; exit}' "$txt_file")
                 end_line=$((end_line - 1))
             else
