@@ -89,7 +89,7 @@ while IFS= read -r domain; do grep -E "^(http|https)://[^/]*$domain" "$scan_path
 # Base directory containing httpx response files for JavaScript
 js_dir="$scan_path/js"
 
-# Function to process files in a directory
+# Function to process JavaScript files
 process_files() {
     local directory="$1"
     # Iterate through each item in the directory
@@ -146,9 +146,45 @@ process_files() {
     done
 }
 
-
 # Start processing files from the base js directory
 process_files "$js_dir"
+
+# Downloading .map files
+process_directory() {
+    local directory="$1"
+
+    # Recursively find all .txt files under the specified directory
+    find "$directory" -type f -name "*.txt" | while read -r txt_file; do
+        echo "Processing: $txt_file"
+
+        # Find the line that contains sourceMappingURL
+        map_url_line=$(grep -m 1 "^//# sourceMappingURL=" "$txt_file")
+        if [[ ! -z "$map_url_line" ]]; then
+            # Extract the .map file name
+            map_file_name=$(echo "$map_url_line" | sed 's/^\/\/# sourceMappingURL=//')
+
+            # Get the path to the .js file from the last line in the .txt file
+            js_file_path=$(tail -n 1 "$txt_file" | tr -d '\r')
+
+            # Extract the base URL from the .js file's path
+            base_url=$(dirname "$js_file_path")
+
+            # Create the URL for the .map file
+            map_file_url="$base_url/$map_file_name"
+
+            # Get the directory path of the .txt file to determine where to save the .map file
+            txt_file_dir=$(dirname "$txt_file")
+
+            echo "Downloading .map file from: $map_file_url to: $txt_file_dir/"
+
+            # Use curl to download the .map file to the same directory as the .txt file
+            curl -o "${txt_file_dir}/${map_file_name}" "$map_file_url"
+        fi
+    done
+}
+
+# Call the function with the starting directory as argument
+process_directory "js"
 
 
 ### Gathering interesting stuff
