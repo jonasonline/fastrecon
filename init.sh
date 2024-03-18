@@ -26,7 +26,7 @@ go install github.com/ffuf/ffuf/v2@latest
 go install github.com/tomnomnom/gf@latest
 
 npm -g install js-beautify
-npm -g install recover-source 
+npm -g install recover-source
 
 sudo apt-get install -y libgbm1 libxrandr2 libcairo2 libatk1.0-0 libatk-bridge2.0-0 libxcomposite1 libxdamage1 libxfixes3 libcups2 libdrm2 libpango-1.0-0 libpangocairo-1.0-0 libxkbcommon0 libx11-xcb1
 
