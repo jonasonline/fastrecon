@@ -186,6 +186,21 @@ process_directory() {
 # Call the function with the starting directory as argument
 process_directory "js"
 
+# Function to recursively execute a command in all subdirectories of a given directory
+execute_in_subdirectories() {
+    local base_directory="$1"
+
+    # Find all directories under the specified base directory
+    find "$base_directory" -type d | while read -r directory; do
+        echo "Executing command in: $directory"
+
+        # Run the command with the directory as its input
+        recover-source -i "$directory"
+    done
+}
+
+# Call the function with the path to the js directory
+execute_in_subdirectories "js"
 
 ### Gathering interesting stuff
 ### TODO - filter extensive probing ### cat "$scan_path/urls.txt" | unfurl format %s://%d%p | grep -vE "\.(js|css|ico)$" | sort | uniq 
@@ -212,7 +227,7 @@ echo "</style>" >> "$output_file"
 echo "</head>" >> "$output_file"
 echo "<body>" >> "$output_file"
 
-# Find all .jpg, .jpeg, .png, .gif files in the current folder and subfolders.
+# Find all .jpg, .jpeg, .png, .gif files in the current folder and subfolders to create a screeshot index page.
 find "$scan_path" -type f \( -iname \*.jpg -o -iname \*.jpeg -o -iname \*.png -o -iname \*.gif \) | while read -r img
 do
     # Konverterar den absoluta sökvägen till en relativ sökväg
