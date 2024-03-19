@@ -57,7 +57,7 @@ cp -v "$scope_path/roots.txt" "$scan_path/roots.txt"
 
 ### DNS Enum
 ## Requires non-free API key## cat "$scan_path/roots.txt" | haktrails subdomains | anew subs.txt | wc -l
-cat "$scan_path/roots.txt" | subfinder | anew "$scan_path/subs.txt" | dnsx -silent -asn | anew  "$scan_path/subs_asn_info.txt" | awk -F'[][]' '{print $2}' | awk '{print $1}' | cut -d',' -f1 | grep -v "^AS0$" | anew "$scan_path/asns.txt"
+cat "$scan_path/roots.txt" | subfinder -all | anew "$scan_path/subs.txt" | dnsx -silent -asn | anew  "$scan_path/subs_asn_info.txt" | awk -F'[][]' '{print $2}' | awk '{print $1}' | cut -d',' -f1 | grep -v "^AS0$" | anew "$scan_path/asns.txt"
 if [ "$bruteDns" = true ]; then
   echo "Brute force DNS subdomains"
   cat "$scan_path/roots.txt" | shuffledns -w "$ppath/lists/jhaddix_all.txt" -r "$ppath/lists/resolvers.txt" | anew "$scan_path/subs.txt" | wc -l
