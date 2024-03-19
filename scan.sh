@@ -15,6 +15,8 @@ slack_token=""
 slack_channel=""
 copyResultsToPath=""
 
+rate=0
+
 for ((i = 1; i <= $#; i++ )); do
     if [ "${!i}" = "--slackToken" ]; then
         i=$((i + 1))
@@ -25,6 +27,9 @@ for ((i = 1; i <= $#; i++ )); do
     elif [ "${!i}" = "--copyResultsToPath" ]; then
         i=$((i + 1))
         copyResultsToPath="${!i}"
+    elif [ "${!i}" = "--rate" ]; then
+        i=$((i + 1))
+        rate="${!i}"    
     elif [ "${!i}" = "--bruteDns" ]; then
         bruteDns=true
     elif [ "${!i}" = "--interestingUrlCheck" ]; then
@@ -70,19 +75,35 @@ fi
 cat "$scan_path/subs.txt" | dnsx -ro -silent -r "$ppath/lists/resolvers.txt" | anew "$scan_path/subs_ips.txt" | dnsx -ptr -ro -r "$ppath/lists/resolvers.txt" -silent | anew "$scan_path/subs_from_ptr_query.txt"
 
 ### Port Scanning & HTTP Server Discovery
-cat "$scan_path/subs_ips.txt" | naabu -top-ports 1000 -silent | anew "$scan_path/alive_ports_per_ip.txt"
-cat "$scan_path/subs.txt" | naabu -top-ports 1000 -silent | anew "$scan_path/alive_ports_per_sub.txt"
-awk '/:80$/{print "http://" $0} /:443$/{print "https://" $0}' "$scan_path/alive_ports_per_sub.txt" | sed 's/:80//g; s/:443//g' | anew "$scan_path/temp/urls_to_crawl.txt"
+if [ "$rate" -ne 0 ]; then
+    cat "$scan_path/subs_ips.txt" | naabu -top-ports 1000 -silent -rate "$rate" | anew "$scan_path/alive_ports_per_ip.txt"
+    cat "$scan_path/subs.txt" | naabu -top-ports 1000 -silent -rate "$rate" | anew "$scan_path/alive_ports_per_sub.txt"
+    awk '/:80$/{print "http://" $0} /:443$/{print "https://" $0}' "$scan_path/alive_ports_per_sub.txt" | sed 's/:80//g; s/:443//g' | anew "$scan_path/temp/urls_to_crawl.txt"
+else
+    cat "$scan_path/subs_ips.txt" | naabu -top-ports 1000 -silent | anew "$scan_path/alive_ports_per_ip.txt"
+    cat "$scan_path/subs.txt" | naabu -top-ports 1000 -silent | anew "$scan_path/alive_ports_per_sub.txt"
+    awk '/:80$/{print "http://" $0} /:443$/{print "https://" $0}' "$scan_path/alive_ports_per_sub.txt" | sed 's/:80//g; s/:443//g' | anew "$scan_path/temp/urls_to_crawl.txt"
+fi
+
 
 ### Crawling and harvesring URLs
-cat "$scan_path/temp/urls_to_crawl.txt" | katana -jc -jsl -aff -kf all | anew "$scan_path/temp/crawl_out.txt"
+if [ "$rate" -ne 0 ]; then
+    cat "$scan_path/temp/urls_to_crawl.txt" | katana -jc -jsl -aff -kf all -rl "$rate" | anew "$scan_path/temp/crawl_out.txt"
+else
+    cat "$scan_path/temp/urls_to_crawl.txt" | katana -jc -jsl -aff -kf all | anew "$scan_path/temp/crawl_out.txt"
+fi
 cat "$scan_path/roots.txt" | gau --blacklist ttf,woff,woff2,eot,otf,svg,png,jpg,jpeg,gif,bmp,pdf,mp3,mp4,mov --subs | anew "$scan_path/temp/gau.txt"
 
 ### Sorting and removing junk and dups
 grep -h '^http' "$scan_path/temp/gau.txt" "$scan_path/temp/crawl_out.txt" | sort | anew "$scan_path/urls.txt"
 
 ### JavaScript Pulling
-cat "$scan_path/urls.txt" | grep -E "\.js(\.map)?($|\?)" | sort | uniq | httpx -silent -mc 200 -sr -srd "$scan_path/js"
+if [ "$rate" -ne 0 ]; then
+    cat "$scan_path/urls.txt" | grep -E "\.js(\.map)?($|\?)" | sort | uniq | httpx -silent -mc 200 -rl "$rate" -sr -srd "$scan_path/js"
+else
+    cat "$scan_path/urls.txt" | grep -E "\.js(\.map)?($|\?)" | sort | uniq | httpx -silent -mc 200 -sr -srd "$scan_path/js"
+fi
+
 python3 $PWD/xnLinkFinder/xnLinkFinder.py -i "$scan_path/js" -o "$scan_path/link_finder_links.txt" -op "$scan_path/link_finder_parameters.txt" -owl "$scan_path/link_finder_wordlist.txt"
 while IFS= read -r domain; do grep -E "^(http|https)://[^/]*$domain" "$scan_path/link_finder_links.txt"; done < "$scan_path/roots.txt" | sort -u | anew "$scan_path/urls.txt"
 
@@ -204,10 +225,20 @@ execute_in_subdirectories "js"
 
 ### Gathering interesting stuff
 ### TODO - filter extensive probing ### cat "$scan_path/urls.txt" | unfurl format %s://%d%p | grep -vE "\.(js|css|ico)$" | sort | uniq 
-cat "$scan_path/urls.txt" | unfurl format %s://%d | sort | uniq | httpx -silent -fhr -sr -srd "$scan_path/responses" -screenshot -esb -ehb -json -o "$scan_path/http.out.json" > /dev/null 2>&1
+
+if [ "$rate" -ne 0 ]; then
+    cat "$scan_path/urls.txt" | unfurl format %s://%d | sort | uniq | httpx -rl "$rate" -silent -fhr -sr -srd "$scan_path/responses" -screenshot -esb -ehb -json -o "$scan_path/http.out.json" > /dev/null 2>&1
+else
+    cat "$scan_path/urls.txt" | unfurl format %s://%d | sort | uniq | httpx -silent -fhr -sr -srd "$scan_path/responses" -screenshot -esb -ehb -json -o "$scan_path/http.out.json" > /dev/null 2>&1
+fi
 if [ "$interestingUrlCheck" = true ]; then
-  echo "Performing full URL check is enabled"
-  cat "$scan_path/urls.txt" | unfurl format %s://%d%p | sort | uniq | httpx -silent -title -status-code -mc 403,400,500 | anew "$scan_path/interesting_urls.txt"
+    echo "Performing full URL check is enabled"
+    if [ "$rate" -ne 0 ]; then
+        cat "$scan_path/urls.txt" | unfurl format %s://%d%p | sort | uniq | httpx -rl "$rate" -silent -title -status-code -mc 403,400,500 | anew "$scan_path/interesting_urls.txt"
+    else
+        cat "$scan_path/urls.txt" | unfurl format %s://%d%p | sort | uniq | httpx -silent -title -status-code -mc 403,400,500 | anew "$scan_path/interesting_urls.txt"
+    fi
+  
 fi
 cat "$scan_path/urls.txt" | unfurl keypairs | anew "$scan_path/url_keypairs.txt"
 
