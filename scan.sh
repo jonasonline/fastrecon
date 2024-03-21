@@ -76,6 +76,7 @@ cat "$scan_path/subs.txt" | dnsx -ro -silent -r "$ppath/lists/resolvers.txt" | a
 
 ### Port Scanning & HTTP Server Discovery
 if [ "$rate" -ne 0 ]; then
+    echo "Rate limited scan"
     cat "$scan_path/subs_ips.txt" | naabu -top-ports 1000 -silent -rate "$rate" | anew "$scan_path/alive_ports_per_ip.txt"
     cat "$scan_path/subs.txt" | naabu -top-ports 1000 -silent -rate "$rate" | anew "$scan_path/alive_ports_per_sub.txt"
     awk '/:80$/{print "http://" $0} /:443$/{print "https://" $0}' "$scan_path/alive_ports_per_sub.txt" | sed 's/:80//g; s/:443//g' | anew "$scan_path/temp/urls_to_crawl.txt"
@@ -88,6 +89,7 @@ fi
 
 ### Crawling and harvesring URLs
 if [ "$rate" -ne 0 ]; then
+    echo "Rate limited scan"
     cat "$scan_path/temp/urls_to_crawl.txt" | katana -jc -jsl -aff -kf all -rl "$rate" | anew "$scan_path/temp/crawl_out.txt"
 else
     cat "$scan_path/temp/urls_to_crawl.txt" | katana -jc -jsl -aff -kf all | anew "$scan_path/temp/crawl_out.txt"
@@ -99,6 +101,7 @@ grep -h '^http' "$scan_path/temp/gau.txt" "$scan_path/temp/crawl_out.txt" | sort
 
 ### JavaScript Pulling
 if [ "$rate" -ne 0 ]; then
+    echo "Rate limited scan"
     cat "$scan_path/urls.txt" | grep -E "\.js(\.map)?($|\?)" | sort | uniq | httpx -silent -mc 200 -rl "$rate" -sr -srd "$scan_path/js"
 else
     cat "$scan_path/urls.txt" | grep -E "\.js(\.map)?($|\?)" | sort | uniq | httpx -silent -mc 200 -sr -srd "$scan_path/js"
@@ -227,6 +230,7 @@ execute_in_subdirectories "js"
 ### TODO - filter extensive probing ### cat "$scan_path/urls.txt" | unfurl format %s://%d%p | grep -vE "\.(js|css|ico)$" | sort | uniq 
 
 if [ "$rate" -ne 0 ]; then
+    echo "Rate limited scan"
     cat "$scan_path/urls.txt" | unfurl format %s://%d | sort | uniq | httpx -rl "$rate" -silent -fhr -sr -srd "$scan_path/responses" -screenshot -esb -ehb -json -o "$scan_path/http.out.json" > /dev/null 2>&1
 else
     cat "$scan_path/urls.txt" | unfurl format %s://%d | sort | uniq | httpx -silent -fhr -sr -srd "$scan_path/responses" -screenshot -esb -ehb -json -o "$scan_path/http.out.json" > /dev/null 2>&1
@@ -234,6 +238,7 @@ fi
 if [ "$interestingUrlCheck" = true ]; then
     echo "Performing full URL check is enabled"
     if [ "$rate" -ne 0 ]; then
+        echo "Rate limited scan"
         cat "$scan_path/urls.txt" | unfurl format %s://%d%p | sort | uniq | httpx -rl "$rate" -silent -title -status-code -mc 403,400,500 | anew "$scan_path/interesting_urls.txt"
     else
         cat "$scan_path/urls.txt" | unfurl format %s://%d%p | sort | uniq | httpx -silent -title -status-code -mc 403,400,500 | anew "$scan_path/interesting_urls.txt"
@@ -278,7 +283,7 @@ echo "</html>" >> "$output_file"
 
 # creating zip for download
 cd $scan_path
-zip -r "$id-$timestamp.zip" . 
+zip -q -r "$id-$timestamp.zip" . 
 cd $ppath
 
 if [ -n "$slack_token" ] && [ -n "$slack_channel" ] && [ $uploadToSlack = true ]; then    
