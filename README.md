@@ -26,6 +26,7 @@ sudo apt install libnss3-dev gconf-service libasound2 libatk1.0-0 libc6 libcairo
 ```
 
 ## Install
+Some tools are installed but not used in the recon. They are installed to prepare for the work following recon. 
 ```bash
 git clone https://github.com/jonasonline/fastrecon.git
 cd fastrecon

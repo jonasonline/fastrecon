@@ -23,6 +23,8 @@ go install -v github.com/owasp-amass/amass/v3/...@master
 go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest
 go install github.com/tomnomnom/unfurl@latest
 go install github.com/ffuf/ffuf/v2@latest
+go install github.com/KathanP19/Gxss@latest
+
 go install github.com/tomnomnom/gf@latest
 
 npm -g install js-beautify
@@ -34,6 +36,8 @@ git clone https://github.com/tomnomnom/gf.git
 cp -r gf/examples ~/.gf
 
 GO111MODULE=on go install github.com/jaeles-project/gospider@latest
+pip3 install uro
+curl -sL https://raw.githubusercontent.com/epi052/feroxbuster/main/install-nix.sh | bash -s $HOME/.local/bin
 
 git clone https://github.com/codingo/DNSCewl.git
 git clone https://github.com/six2dez/OneListForAll.git 
