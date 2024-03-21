@@ -218,7 +218,7 @@ execute_in_subdirectories() {
 }
 
 # Call the function with the path to the js directory
-execute_in_subdirectories "js"
+execute_in_subdirectories "$scan_path/js"
 
 ### Gathering interesting stuff
 ### TODO - filter extensive probing ### cat "$scan_path/urls.txt" | unfurl format %s://%d%p | grep -vE "\.(js|css|ico)$" | sort | uniq 
