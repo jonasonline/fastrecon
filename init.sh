@@ -46,3 +46,6 @@ git clone https://github.com/xnl-h4ck3r/xnLinkFinder.git
 cd xnLinkFinder
 sudo python3 setup.py install
 cd ..
+
+echo "Done!"
+echo "Remember to authenticate to Project Discovery to use DP tools! (https://cloud.projectdiscovery.io/)
