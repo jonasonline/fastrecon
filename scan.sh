@@ -202,7 +202,7 @@ process_directory() {
 }
 
 # Call the function with the starting directory as argument
-process_directory "js"
+process_directory "$js_dir"
 
 # Function to recursively execute a command in all subdirectories of a given directory
 execute_in_subdirectories() {
@@ -218,7 +218,7 @@ execute_in_subdirectories() {
 }
 
 # Call the function with the path to the js directory
-execute_in_subdirectories "$scan_path/js"
+execute_in_subdirectories "$js_dir"
 
 ### Gathering interesting stuff
 ### TODO - filter extensive probing ### cat "$scan_path/urls.txt" | unfurl format %s://%d%p | grep -vE "\.(js|css|ico)$" | sort | uniq 
