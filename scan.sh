@@ -275,6 +275,44 @@ done
 echo "</body>" >> "$output_file"
 echo "</html>" >> "$output_file"
 
+update_and_notify() {
+    local new_subs="$scan_path/subs.txt"
+    local new_urls="$scan_path/urls.txt"
+    local old_subs="$scope_path/subs.txt"
+    local old_urls="$scope_path/urls.txt"
+    local notify_config="$HOME/.config/notify/provider-config.yaml"
+
+    # Check for the notify configuration file
+    if [ ! -f "$notify_config" ]; then
+        echo "Notify configuration file not found: $notify_config"
+        return 1
+    fi
+
+    # Check and update subs.txt
+    if [ -f "$new_subs" ]; then
+        # Append new unique subdomains to the existing list and notify if there are new entries
+        if ! cmp --silent "$new_subs" "$old_subs"; then
+            local new_entries=$(anew "$new_subs" "$old_subs")
+            if [ ! -z "$new_entries" ]; then
+                echo "$new_entries" | notify -slack -bulk -silent
+            fi
+        fi
+    fi
+
+    # Check and update urls.txt
+    if [ -f "$new_urls" ]; then
+        # Append new unique URLs to the existing list and notify if there are new entries
+        if ! cmp --silent "$new_urls" "$old_urls"; then
+            local new_entries=$(anew "$new_urls" "$old_urls")
+            if [ ! -z "$new_entries" ]; then
+                echo "$new_entries" | notify -slack -bulk -silent
+            fi
+        fi
+    fi
+}
+
+update_and_notify
+
 # creating zip for download
 cd $scan_path
 zip -q -r "$id-$timestamp.zip" . 
