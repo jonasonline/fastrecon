@@ -220,7 +220,7 @@ execute_in_subdirectories() {
 # Call the function with the path to the js directory
 execute_in_subdirectories "$js_dir"
 
-### Gathering interesting stuff
+echo "Gathering interesting stuff"
 ### TODO - filter extensive probing ### cat "$scan_path/urls.txt" | unfurl format %s://%d%p | grep -vE "\.(js|css|ico)$" | sort | uniq 
 
 if [ "$rate" -ne 0 ]; then
