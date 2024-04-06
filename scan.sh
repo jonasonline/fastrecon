@@ -32,8 +32,6 @@ for ((i = 1; i <= $#; i++ )); do
         rate="${!i}"    
     elif [ "${!i}" = "--bruteDns" ]; then
         bruteDns=true
-    elif [ "${!i}" = "--interestingUrlCheck" ]; then
-        interestingUrlCheck=true
     elif [ "${!i}" = "--uploadToSlack" ]; then
         uploadToSlack=true
     fi
@@ -229,20 +227,10 @@ if [ "$rate" -ne 0 ]; then
 else
     cat "$scan_path/urls.txt" | unfurl format %s://%d | sort | uniq | httpx -silent -fhr -sr -srd "$scan_path/responses" -screenshot -esb -ehb -json -o "$scan_path/http.out.json" > /dev/null 2>&1
 fi
-if [ "$interestingUrlCheck" = true ]; then
-    echo "Performing full URL check is enabled"
-    if [ "$rate" -ne 0 ]; then
-        echo "Rate limited scan"
-        cat "$scan_path/urls.txt" | unfurl format %s://%d%p | sort | uniq | httpx -rl "$rate" -silent -title -status-code -mc 403,400,500 | anew "$scan_path/interesting_urls.txt"
-    else
-        cat "$scan_path/urls.txt" | unfurl format %s://%d%p | sort | uniq | httpx -silent -title -status-code -mc 403,400,500 | anew "$scan_path/interesting_urls.txt"
-    fi
-  
-fi
+
 cat "$scan_path/urls.txt" | unfurl keypairs | anew "$scan_path/url_keypairs.txt"
 
-### Fuzzing - disabled
-#ffuf -c -w OneListForAll/onelistforallmicro.txt:list -w $scan_path/interesting_urls_formatted.txt:host -u host/list -mc 200,400,500,403 -o "$scan_path/fuzzed.txt"
+
 
 ### Create screenshot gallery
 output_file="$scan_path/screenshotGallery.html"

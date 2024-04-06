@@ -54,7 +54,6 @@ FLAGS:
   --slackChannel string    Slack channel ID for sending notifications.
   --copyResultsToPath      Specify a path to copy the scan results archive.
   --bruteDns               Enable DNS subdomain brute-forcing.
-  --interestingUrlCheck    Perform a detailed check for potentially interesting URLs.
   --uploadToSlack          Upload the results archive to a specified Slack channel.
 
 ```
@@ -84,7 +83,7 @@ FLAGS:
 
   **Description**: Results from reverse DNS lookups (PTR queries) on IP addresses, revealing additional subdomains or hostnames not found through forward DNS lookups.
 
-- **`alive_ports_per_ip.txt`** and **`alive_ports_per_sub.txt`**
+- **`alive_ports.txt`**
 
   **Description**: Results from port scanning operations, listing open ports on IP addresses and subdomains, indicating potential services for further investigation.
 
