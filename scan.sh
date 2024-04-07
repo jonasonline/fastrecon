@@ -55,11 +55,20 @@ cp -v "$scope_path/roots.txt" "$scan_path/roots.txt"
 
 ### DNS Enum
 ## Requires non-free API key## cat "$scan_path/roots.txt" | haktrails subdomains | anew subs.txt | wc -l
-cat "$scan_path/roots.txt" | subfinder -all -recursive | anew "$scan_path/subs.txt" | dnsx -silent -asn | anew  "$scan_path/subs_asn_info.txt" | awk -F'[][]' '{print $2}' | awk '{print $1}' | cut -d',' -f1 | grep -v "^AS0$" | anew "$scan_path/asns.txt"
-if [ "$bruteDns" = true ]; then
-  echo "Brute force DNS subdomains"
-  cat "$scan_path/roots.txt" | shuffledns -w "$ppath/lists/jhaddix_all.txt" -r "$ppath/lists/resolvers.txt" | anew "$scan_path/subs.txt" | wc -l
+# Check if the curated subs file exists
+if [ ! -f "$scope_path/subs_curated.txt" ]; then
+    # If the file does not exist, run the commands
+    cat "$scan_path/roots.txt" | subfinder -all -recursive | anew "$scan_path/subs.txt" | dnsx -silent -asn | anew  "$scan_path/subs_asn_info.txt" | awk -F'[][]' '{print $2}' | awk '{print $1}' | cut -d',' -f1 | grep -v "^AS0$" | anew "$scan_path/asns.txt"
+    
+    # Check if brute force DNS subdomains option is enabled
+    if [ "$bruteDns" = true ]; then
+        echo "Brute force DNS subdomains"
+        cat "$scan_path/roots.txt" | shuffledns -w "$ppath/lists/jhaddix_all.txt" -r "$ppath/lists/resolvers.txt" | anew "$scan_path/subs.txt" | wc -l
+    fi
+else
+    echo "The file $scope_path/subs_curated.txt already exists, skipping scan."
 fi
+
 
 ## Not Working 
 # cat "$scan_path/subs.txt" | sed -e 's/\./\n/g' -e 's/\-/\n/g' -e 's/[0-9]*//g' | sort -u | anew "$scan_path/domain_words.txt"
