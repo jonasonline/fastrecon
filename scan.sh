@@ -300,10 +300,18 @@ update_and_notify() {
     # Check and update subs.txt
     if [ -f "$new_subs" ]; then
         # Append new unique subdomains to the existing list and notify if there are new entries
+        local old_subs_exists_and_not_empty=false
+        if [ -f "$old_subs" ] && [ -s "$old_subs" ]; then
+            old_subs_exists_and_not_empty=true
+            echo "The old subs file exists and is not empty."
+        else
+            echo "The old subs file does not exist or is empty."
+        fi
+
         if ! cmp --silent "$new_subs" "$old_subs"; then
-            local new_entries=$(anew "$new_subs" "$old_subs")
-            if [ ! -z "$new_entries" ]; then
-                echo "$new_entries" | notify -slack -bulk -silent
+            local new_entries=$(cat "$new_subs" "$old_subs" | anew $old_subs)
+            if [ ! -z "$new_entries" ] && [ "$old_subs_exists_and_not_empty" = true ]; then
+                echo "$new_entries" | notify -bulk -silent
             fi
         fi
     fi
@@ -311,10 +319,17 @@ update_and_notify() {
     # Check and update urls.txt
     if [ -f "$new_urls" ]; then
         # Append new unique URLs to the existing list and notify if there are new entries
+        local old_urls_exists_and_not_empty=false
+        if [ -f "$old_urls" ] && [ -s "$old_urls" ]; then
+            old_urls_exists_and_not_empty=true
+            echo "The old urls file exists and is not empty."
+        else
+            echo "The old urls file does not exist or is empty."
+        fi
         if ! cmp --silent "$new_urls" "$old_urls"; then
-            local new_entries=$(anew "$new_urls" "$old_urls")
-            if [ ! -z "$new_entries" ]; then
-                echo "$new_entries" | notify -slack -bulk -silent
+            local new_entries=$(cat "$new_urls" "$old_urls" | anew $old_urls)
+            if [ ! -z "$new_entries" ] && [ "$old_urls_exists_and_not_empty" = true ]; then
+                echo "New entries in $old_urls" | notify -bulk -silent
             fi
         fi
     fi
