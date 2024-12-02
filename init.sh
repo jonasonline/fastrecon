@@ -63,6 +63,7 @@ go install -v github.com/ffuf/ffuf/v2@latest
 go install -v github.com/KathanP19/Gxss@latest
 go install -v github.com/projectdiscovery/notify/cmd/notify@latest
 go install -v github.com/tomnomnom/gf@latest
+go install -v github.com/projectdiscovery/urlfinder/cmd/urlfinder@latest
 GO111MODULE=on go install -v github.com/jaeles-project/gospider@latest
 
 # Install npm packages globally if not already installed

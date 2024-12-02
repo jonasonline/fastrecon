@@ -97,8 +97,10 @@ echo "Starting crawling and URL harvesting"
 if [ "$rate" -ne 0 ]; then
     echo "Rate limited scan"
     cat "$scan_path/temp/urls_to_crawl.txt" | katana -jc -jsl -aff -kf all -rl "$rate" | anew "$scan_path/temp/crawl_out.txt"
+    cat "$scan_path/roots.txt" | urlfinder -rl "$rate" -all | anew "$scan_path/temp/urls_unsorted.txt"
 else
     cat "$scan_path/temp/urls_to_crawl.txt" | katana -jc -jsl -aff -kf all | anew "$scan_path/temp/crawl_out.txt"
+    cat "$scan_path/roots.txt" | urlfinder -all | anew "$scan_path/temp/urls_unsorted.txt"
 fi
 cat "$scan_path/roots.txt" | gau --blacklist ttf,woff,woff2,eot,otf,svg,png,jpg,jpeg,gif,bmp,pdf,mp3,mp4,mov --subs | anew "$scan_path/temp/gau.txt"
 
