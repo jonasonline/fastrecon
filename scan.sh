@@ -106,6 +106,7 @@ cat "$scan_path/roots.txt" | gau --blacklist ttf,woff,woff2,eot,otf,svg,png,jpg,
 
 ### Sorting and removing junk and dups
 grep -h '^http' "$scan_path/temp/gau.txt" "$scan_path/temp/crawl_out.txt" | sort | anew "$scan_path/urls.txt"
+cat "$scan_path/temp/urls_unsorted.txt" | sort | anew "$scan_path/urls.txt"
 echo "Finished crawling and URL harvesting"
 
 ### JavaScript Pulling
